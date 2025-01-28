@@ -21,7 +21,7 @@
         <Description>SDK for scheduling cron jobs using cronjob.org. Provides a simple and reliable way to create, manage, and monitor scheduled tasks through the cron-job.org API.</Description>
 
         <!-- Repository Information -->
-        <RepositoryUrl>https://github.com/yourusername/CronJobSdk</RepositoryUrl>
+        <RepositoryUrl>https://github.com/wassem7/CronJob.Org.Sdk</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
 
         <!-- Package Information -->
