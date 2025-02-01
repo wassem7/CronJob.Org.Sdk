@@ -179,27 +179,6 @@ public class CronJobService : ICronJobService
             
             var response = await SendScheduleRequestAsync(apiRequest);
             
-            // var result = new ScheduleJobResponse 
-            // {
-            //     Success = response.IsSuccessStatusCode,
-            //     Message = response.IsSuccessStatusCode 
-            //         ? "Job scheduled successfully" 
-            //         : $"Failed to schedule job: {response.StatusCode}",
-            //     StatusCode = response.StatusCode
-            // };
-            //
-            // if (result.Success)
-            // {
-            //     _logger.LogInformation("Successfully scheduled job for webhook: {WebhookUrl}", request.WebhookUrl);
-            // }
-            // else
-            // {
-            //     _logger.LogError("Failed to schedule job. Status code: {StatusCode}, Webhook: {WebhookUrl}.\n{Response}", 
-            //         response.StatusCode, request.WebhookUrl,JsonSerializer.Serialize(response));
-            // }
-            
-            // return result;
-            
             
             var responseContent = await response.Content.ReadAsStringAsync();
             
@@ -359,53 +338,191 @@ public class CronJobService : ICronJobService
         }
     }
 
-    private ScheduleJobResponse ConfigureRecurringSchedule(Schedule schedule, CronJobScheduleRequest request)
+   private ScheduleJobResponse ConfigureRecurringSchedule(Schedule schedule, CronJobScheduleRequest request)
+{
+    try
     {
-        try
+        schedule.ExpiresAt = 0;
+
+        switch (request.RecurringPattern)
         {
-            schedule.ExpiresAt = 0;
-
-            if (request.MinuteInterval.HasValue)
-            {
-                _logger.LogDebug("Configuring recurring schedule with minute interval: {Interval}", 
-                    request.MinuteInterval.Value);
-
-                var minutes = new List<int>();
-                for (int i = 0; i < 60; i += request.MinuteInterval.Value)
+            case RecurringPattern.EveryMinute:
+                if (request.MinuteInterval.HasValue)
                 {
-                    minutes.Add(i);
+                    var minutes = new List<int>();
+                    for (int i = 0; i < 60; i += request.MinuteInterval.Value)
+                    {
+                        minutes.Add(i);
+                    }
+                    schedule.Hours = new List<int> { -1 };
+                    schedule.Minutes = minutes;
+                }
+                else
+                {
+                    schedule.Hours = new List<int> { -1 };
+                    schedule.Minutes = new List<int> { -1 };
+                }
+                schedule.Mdays = new List<int> { -1 };
+                schedule.Months = new List<int> { -1 };
+                schedule.Wdays = new List<int> { -1 };
+                break;
+
+            case RecurringPattern.Hourly:
+                schedule.Hours = new List<int> { -1 };
+                schedule.Minutes = request.Minute.HasValue 
+                    ? new List<int> { request.Minute.Value }
+                    : new List<int> { 0 };
+                schedule.Mdays = new List<int> { -1 };
+                schedule.Months = new List<int> { -1 };
+                schedule.Wdays = new List<int> { -1 };
+                break;
+
+            case RecurringPattern.Daily:
+                schedule.Hours = request.Hour.HasValue 
+                    ? new List<int> { request.Hour.Value }
+                    : new List<int> { 0 };
+                schedule.Minutes = request.Minute.HasValue 
+                    ? new List<int> { request.Minute.Value }
+                    : new List<int> { 0 };
+                schedule.Mdays = new List<int> { -1 };
+                schedule.Months = new List<int> { -1 };
+                schedule.Wdays = new List<int> { -1 };
+                break;
+
+            case RecurringPattern.EveryXDays:
+                if (!request.DayInterval.HasValue || request.DayInterval.Value < 1)
+                {
+                    return new ScheduleJobResponse 
+                    { 
+                        Success = false, 
+                        Message = "DayInterval must be specified and greater than 0 for EveryXDays pattern" 
+                    };
                 }
 
-                schedule.Hours = new List<int> { -1 };
-                schedule.Minutes = minutes;
-                schedule.Mdays = new List<int> { -1 };
+                var currentDate = DateTime.Now;
+                var daysInMonth = DateTime.DaysInMonth(currentDate.Year, currentDate.Month);
+                var days = new List<int>();
+                
+                for (int day = 1; day <= daysInMonth; day += request.DayInterval.Value)
+                {
+                    days.Add(day);
+                }
+
+                schedule.Hours = request.Hour.HasValue 
+                    ? new List<int> { request.Hour.Value }
+                    : new List<int> { 0 };
+                schedule.Minutes = request.Minute.HasValue 
+                    ? new List<int> { request.Minute.Value }
+                    : new List<int> { 0 };
+                schedule.Mdays = days;
                 schedule.Months = new List<int> { -1 };
                 schedule.Wdays = new List<int> { -1 };
-            }
-            else
-            {
-                _logger.LogDebug("Configuring recurring schedule with hour: {Hour}, minute: {Minute}", 
-                    request.Hour, request.Minute);
+                break;
 
-                schedule.Hours = request.Hour.HasValue ? new List<int> { request.Hour.Value } : new List<int> { -1 };
-                schedule.Minutes = request.Minute.HasValue ? new List<int> { request.Minute.Value } : new List<int> { -1 };
+            case RecurringPattern.Weekly:
+                if (!request.DayOfWeek.HasValue)
+                {
+                    return new ScheduleJobResponse 
+                    { 
+                        Success = false, 
+                        Message = "DayOfWeek is required for weekly pattern" 
+                    };
+                }
+                schedule.Hours = request.Hour.HasValue 
+                    ? new List<int> { request.Hour.Value }
+                    : new List<int> { 0 };
+                schedule.Minutes = request.Minute.HasValue 
+                    ? new List<int> { request.Minute.Value }
+                    : new List<int> { 0 };
                 schedule.Mdays = new List<int> { -1 };
                 schedule.Months = new List<int> { -1 };
-                schedule.Wdays = new List<int> { -1 };
-            }
+                schedule.Wdays = new List<int> { (int)request.DayOfWeek.Value };
+                break;
 
-            return new ScheduleJobResponse { Success = true };
+            case RecurringPattern.Monthly:
+                if (!request.DayOfMonth.HasValue)
+                {
+                    return new ScheduleJobResponse 
+                    { 
+                        Success = false, 
+                        Message = "DayOfMonth is required for monthly pattern" 
+                    };
+                }
+                schedule.Hours = request.Hour.HasValue 
+                    ? new List<int> { request.Hour.Value }
+                    : new List<int> { 0 };
+                schedule.Minutes = request.Minute.HasValue 
+                    ? new List<int> { request.Minute.Value }
+                    : new List<int> { 0 };
+                schedule.Mdays = new List<int> { request.DayOfMonth.Value };
+                
+                if (request.MonthInterval.HasValue && request.MonthInterval.Value > 1)
+                {
+                    var months = new List<int>();
+                    for (int i = 1; i <= 12; i += request.MonthInterval.Value)
+                    {
+                        months.Add(i);
+                    }
+                    schedule.Months = months;
+                }
+                else
+                {
+                    schedule.Months = new List<int> { -1 };
+                }
+                
+                schedule.Wdays = new List<int> { -1 };
+                break;
+
+            case RecurringPattern.Yearly:
+                if (!request.Month.HasValue || !request.DayOfMonth.HasValue)
+                {
+                    return new ScheduleJobResponse 
+                    { 
+                        Success = false, 
+                        Message = "Month and DayOfMonth are required for yearly pattern" 
+                    };
+                }
+                schedule.Hours = request.Hour.HasValue 
+                    ? new List<int> { request.Hour.Value }
+                    : new List<int> { 0 };
+                schedule.Minutes = request.Minute.HasValue 
+                    ? new List<int> { request.Minute.Value }
+                    : new List<int> { 0 };
+                schedule.Mdays = new List<int> { request.DayOfMonth.Value };
+                schedule.Months = new List<int> { request.Month.Value };
+                schedule.Wdays = new List<int> { -1 };
+                break;
+
+            case RecurringPattern.Custom:
+                schedule.Hours = request.Hour.HasValue 
+                    ? new List<int> { request.Hour.Value }
+                    : new List<int> { -1 };
+                schedule.Minutes = request.Minute.HasValue 
+                    ? new List<int> { request.Minute.Value }
+                    : new List<int> { -1 };
+                schedule.Mdays = request.DayOfMonth.HasValue 
+                    ? new List<int> { request.DayOfMonth.Value }
+                    : new List<int> { -1 };
+                schedule.Months = request.Month.HasValue 
+                    ? new List<int> { request.Month.Value }
+                    : new List<int> { -1 };
+                schedule.Wdays = request.DayOfWeek.HasValue 
+                    ? new List<int> { (int)request.DayOfWeek.Value }
+                    : new List<int> { -1 };
+                break;
         }
-        catch (Exception ex)
-        {
-            return new ScheduleJobResponse 
-            { 
-                Success = false, 
-                Message = $"Failed to configure recurring schedule: {ex.Message}" 
-            };
-        }
+
+        return new ScheduleJobResponse { Success = true };
     }
-
+    catch (Exception ex)
+    {
+        return new ScheduleJobResponse 
+        { 
+            Success = false, 
+            Message = $"Failed to configure recurring schedule: {ex.Message}" 
+        };
+    }
+}
     private ScheduleJobResponse ConfigureOneTimeSchedule(Schedule schedule, CronJobScheduleRequest request)
     {
         try
