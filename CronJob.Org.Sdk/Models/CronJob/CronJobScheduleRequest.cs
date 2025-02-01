@@ -4,27 +4,21 @@ namespace CronJob.Org.Sdk.Models.CronJob;
 
 public class CronJobScheduleRequest
 {
-    [JsonPropertyName("webhookUrl")]
     public string WebhookUrl { get; set; }
-
-    [JsonPropertyName("timeZone")]
+    public JobScheduleType ScheduleType { get; set; }
     public string TimeZone { get; set; } = "UTC";
 
-    [JsonPropertyName("scheduleType")]
-    public JobScheduleType ScheduleType { get; set; }
+    // For one-time jobs
+    public DateTime? ExecutionTime { get; set; }
 
     // For recurring jobs
-    [JsonPropertyName("hour")]
+    public RecurringPattern RecurringPattern { get; set; }
     public int? Hour { get; set; }
-
-    [JsonPropertyName("minute")]
     public int? Minute { get; set; }
-
-    // For interval-based jobs
-    [JsonPropertyName("minuteInterval")]
+    public int? DayOfMonth { get; set; }
+    public DayOfWeek? DayOfWeek { get; set; }
+    public int? Month { get; set; }
     public int? MinuteInterval { get; set; }
-
-    // For one-time jobs
-    [JsonPropertyName("executionTime")]
-    public DateTime? ExecutionTime { get; set; }
+    public int? MonthInterval { get; set; } // For every X months
+    public int? DayInterval { get; set; }   // For every X days
 }
