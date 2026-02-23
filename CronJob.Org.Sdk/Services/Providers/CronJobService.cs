@@ -541,7 +541,7 @@ public class CronJobService : ICronJobService
             schedule.Minutes = new List<int> { executionTimeInZone.Minute };
             schedule.Mdays = new List<int> { executionTimeInZone.Day };
             schedule.Months = new List<int> { executionTimeInZone.Month };
-            schedule.Wdays = new List<int> { (int)executionTimeInZone.DayOfWeek };
+            schedule.Wdays = new List<int> { -1 };
 
             var expirationTime = executionTimeInZone.AddMinutes(1);
             schedule.ExpiresAt = long.Parse(expirationTime.ToString("yyyyMMddHHmmss"));

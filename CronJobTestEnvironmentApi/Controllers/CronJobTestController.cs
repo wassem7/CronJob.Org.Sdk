@@ -34,13 +34,29 @@ public class CronJobController : ControllerBase
             
             // var request = new CronJobScheduleRequest
             // {
-            //     WebhookUrl = "https://webhook.site/d820d15e-7f9c-4a91-b723-e19114f3ce3f",
+            //     WebhookUrl = "https://webhook.site/8a4bc0ad-e4bd-49dc-a69a-56e0c1acc2cf",
             //     ScheduleType = JobScheduleType.Recurring,
-            //     Hour = 14,          // Run at 2 PM
-            //     Minute = 30,        // at 30 minutes
+            //     RecurringPattern = RecurringPattern.EveryXDays,
+            //     Hour = 14,  // 24-hour format
+            //     Minute = 30,
+            //     DayInterval = 2,
             //     TimeZone = "UTC"
             // };
             
+            
+            // Every month on the 15th at 2:30 PM
+            // var request = new CronJobScheduleRequest
+            // {
+            //     WebhookUrl = "https://webhook.site/8a4bc0ad-e4bd-49dc-a69a-56e0c1acc2cf",
+            //     ScheduleType = JobScheduleType.Recurring,
+            //     RecurringPattern = RecurringPattern.Monthly,
+            //     Hour = 14, // 24-hour format
+            //     Minute = 30,
+            //     DayOfMonth = 15,
+            //     TimeZone = "UTC"
+            // };
+            //
+            //
             // var request = new CronJobScheduleRequest
             // {
             //     WebhookUrl = "https://webhook.site/d820d15e-7f9c-4a91-b723-e19114f3ce3f",
@@ -49,11 +65,25 @@ public class CronJobController : ControllerBase
             //     TimeZone = "America/New_York"
             // };
 
+            // var request = new CronJobScheduleRequest
+            // {
+            //     WebhookUrl = "https://webhook.site/8a8fb52d-b56f-4e79-8813-f091b7041efb",
+            //     ScheduleType = JobScheduleType.Recurring,
+            //     MinuteInterval = 15,    // Run every 15 minutes
+            //     TimeZone = "UTC"
+            // };
+
+           
+            
             var request = new CronJobScheduleRequest
             {
                 WebhookUrl = "https://webhook.site/8a8fb52d-b56f-4e79-8813-f091b7041efb",
                 ScheduleType = JobScheduleType.Recurring,
-                MinuteInterval = 15,    // Run every 15 minutes
+                RecurringPattern = RecurringPattern.Yearly,
+                Month = 3,         // March
+                DayOfMonth = 15,   // 15th
+                Hour = 15,
+                Minute = 0,
                 TimeZone = "UTC"
             };
 

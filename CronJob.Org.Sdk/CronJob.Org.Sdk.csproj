@@ -6,10 +6,13 @@
 
         <!-- Package Metadata -->
         <PackageId>CronJob.Org.Sdk</PackageId>
-        <Version>1.0.1</Version>
+        <Version>1.0.2</Version>
         <Authors>Wassem Darkwa</Authors>
         <Description>SDK for scheduling cron jobs using cronjob.org. Provides a simple and reliable way to create, manage, and monitor scheduled tasks through the cron-job.org API.</Description>
         <PackageReleaseNotes>
+            Version 1.0.2:
+            - Added support for cron job recurring patterns
+
             Version 1.0.1:
             - Initial release
             - Added core functionality for CronJob.Org integration
